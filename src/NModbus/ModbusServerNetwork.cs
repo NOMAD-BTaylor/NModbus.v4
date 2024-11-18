@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 using NModbus.Interfaces;
-using System.Collections.Concurrent;
 
 namespace NModbus
 {
@@ -12,7 +12,8 @@ namespace NModbus
 
         public ModbusServerNetwork(ILoggerFactory loggerFactory)
         {
-            this.loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            this.loggerFactory =
+                loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             this.logger = loggerFactory.CreateLogger<ModbusServerNetwork>();
         }
 
@@ -27,26 +28,36 @@ namespace NModbus
         }
 
         public async Task ProcessRequestAsync(
-            IModbusDataUnit requestMessage, 
-            IModbusClientTransport clientTransport, 
-            CancellationToken cancellationToken = default)
+            IModbusDataUnit requestMessage,
+            IModbusClientTransport clientTransport,
+            CancellationToken cancellationToken = default
+        )
         {
             if (requestMessage.UnitIdentifier == 0)
             {
                 foreach (var server in servers.Values)
                 {
-                    await server.ProcessRequestAsync(requestMessage.ProtocolDataUnit, cancellationToken);
+                    await server.ProcessRequestAsync(
+                        requestMessage.ProtocolDataUnit,
+                        cancellationToken
+                    );
                 }
             }
             else
             {
                 if (servers.TryGetValue(requestMessage.UnitIdentifier, out var server))
                 {
-                    var response = await server.ProcessRequestAsync(requestMessage.ProtocolDataUnit, cancellationToken);
+                    var response = await server.ProcessRequestAsync(
+                        requestMessage.ProtocolDataUnit,
+                        cancellationToken
+                    );
 
                     if (response != null)
                     {
-                        await clientTransport.SendAsync(new ModbusDataUnit(requestMessage.UnitIdentifier, response), cancellationToken);
+                        await clientTransport.SendAsync(
+                            new ModbusDataUnit(requestMessage.UnitIdentifier, response),
+                            cancellationToken
+                        );
                     }
                 }
                 else

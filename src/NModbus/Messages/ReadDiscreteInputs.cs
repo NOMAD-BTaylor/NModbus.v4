@@ -3,15 +3,22 @@ using NModbus.Helpers;
 
 namespace NModbus.Messages
 {
-    public class ReadDiscreteInputsMessageSerilizer : ModbusMessageSerializer<ReadDiscreteInputsRequest, ReadDiscreteInputsResponse>
+    public class ReadDiscreteInputsMessageSerilizer
+        : ModbusMessageSerializer<ReadDiscreteInputsRequest, ReadDiscreteInputsResponse>
     {
-        protected override void SerializeRequestCore(ReadDiscreteInputsRequest request, EndianWriter writer)
+        protected override void SerializeRequestCore(
+            ReadDiscreteInputsRequest request,
+            EndianWriter writer
+        )
         {
             writer.Write(request.StartingAddress);
             writer.Write(request.QuantityOfInputs);
         }
 
-        protected override void SerializeResponseCore(ReadDiscreteInputsResponse response, EndianWriter writer)
+        protected override void SerializeResponseCore(
+            ReadDiscreteInputsResponse response,
+            EndianWriter writer
+        )
         {
             writer.Write((byte)response.InputStatus.Length);
             writer.Write(response.InputStatus);

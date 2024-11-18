@@ -19,6 +19,9 @@
         /// <param name="message"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<IModbusDataUnit> SendAndReceiveAsync(IModbusDataUnit message, CancellationToken cancellationToken = default);
+        Task<IModbusDataUnit> SendAndReceiveAsync(
+            IModbusDataUnit message,
+            CancellationToken cancellationToken = default
+        );
     }
 }

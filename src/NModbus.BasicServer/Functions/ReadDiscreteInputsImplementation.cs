@@ -6,17 +6,25 @@ using NModbus.Messages;
 
 namespace NModbus.BasicServer.Functions
 {
-    public class ReadDiscreteInputsImplementation : IModbusFunctionImplementation<ReadDiscreteInputsRequest, ReadDiscreteInputsResponse>
+    public class ReadDiscreteInputsImplementation
+        : IModbusFunctionImplementation<ReadDiscreteInputsRequest, ReadDiscreteInputsResponse>
     {
         private readonly IDevicePointStorage<bool> storage;
 
-        public ReadDiscreteInputsImplementation(ILoggerFactory loggerFactory, IDevicePointStorage<bool> storage)
+        public ReadDiscreteInputsImplementation(
+            ILoggerFactory loggerFactory,
+            IDevicePointStorage<bool> storage
+        )
         {
-            if (loggerFactory is null) throw new ArgumentNullException(nameof(loggerFactory));
+            if (loggerFactory is null)
+                throw new ArgumentNullException(nameof(loggerFactory));
             this.storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
-        public Task<ReadDiscreteInputsResponse> ProcessAsync(ReadDiscreteInputsRequest request, CancellationToken cancellationToken)
+        public Task<ReadDiscreteInputsResponse> ProcessAsync(
+            ReadDiscreteInputsRequest request,
+            CancellationToken cancellationToken
+        )
         {
             var points = storage.ReadPoints(request.StartingAddress, request.QuantityOfInputs);
 

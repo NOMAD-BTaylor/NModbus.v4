@@ -3,7 +3,6 @@
 namespace NModbus.Transport.IP.Mbap
 {
     public static class MbapSerializer
-
     {
         public const ushort ProtocolIdentifier = 0x0000;
 
@@ -15,7 +14,8 @@ namespace NModbus.Transport.IP.Mbap
         public static byte[] SerializeMbapHeader(
             ushort transactionIdentifier,
             ushort length,
-            byte unitIdentifier)
+            byte unitIdentifier
+        )
         {
             using var writer = new EndianWriter(Endianness.BigEndian);
 
@@ -27,11 +27,12 @@ namespace NModbus.Transport.IP.Mbap
             return writer.ToArray();
         }
 
-        public static MbapHeader DeserializeMbapHeader(
-            byte[] buffer)
+        public static MbapHeader DeserializeMbapHeader(byte[] buffer)
         {
             if (buffer.Length != MbapHeaderLength)
-                throw new InvalidOperationException($"Expected a buffer of size {MbapHeaderLength} but was given a buffer with {buffer.Length} elements.");
+                throw new InvalidOperationException(
+                    $"Expected a buffer of size {MbapHeaderLength} but was given a buffer with {buffer.Length} elements."
+                );
 
             using var reader = new EndianReader(buffer, Endianness.BigEndian);
 
@@ -39,7 +40,8 @@ namespace NModbus.Transport.IP.Mbap
                 reader.ReadUInt16(),
                 reader.ReadUInt16(),
                 reader.ReadUInt16(),
-                reader.ReadByte());
+                reader.ReadByte()
+            );
         }
     }
 }

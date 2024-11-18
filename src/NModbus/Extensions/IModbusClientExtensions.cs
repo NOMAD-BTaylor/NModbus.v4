@@ -18,10 +18,20 @@ namespace NModbus
         /// <param name="functionCode"></param>
         /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
-        public static IClientFunction<TRequest, TResponse> GetClientFunction<TRequest, TResponse>(this IModbusClient client, byte functionCode)
+        public static IClientFunction<TRequest, TResponse> GetClientFunction<TRequest, TResponse>(
+            this IModbusClient client,
+            byte functionCode
+        )
         {
-            if (!client.TryGetClientFunction<TRequest, TResponse>(functionCode, out var clientFunction))
-                throw new KeyNotFoundException($"Unable to find an {nameof(IClientFunction)}<{typeof(TRequest).Name},{typeof(TResponse).Name}> with function code 0x{functionCode:X2}");
+            if (
+                !client.TryGetClientFunction<TRequest, TResponse>(
+                    functionCode,
+                    out var clientFunction
+                )
+            )
+                throw new KeyNotFoundException(
+                    $"Unable to find an {nameof(IClientFunction)}<{typeof(TRequest).Name},{typeof(TResponse).Name}> with function code 0x{functionCode:X2}"
+                );
 
             return clientFunction;
         }
@@ -31,7 +41,8 @@ namespace NModbus
             byte functionCode,
             byte unitIdentifier,
             TRequest request,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             //Find the client function.
             var clientFunction = client.GetClientFunction<TRequest, TResponse>(functionCode);
@@ -40,7 +51,10 @@ namespace NModbus
             var serializedRequest = clientFunction.MessageSerializer.SerializeRequest(request);
 
             //Form the request
-            var requestProtocolDataUnit = new ProtocolDataUnit(clientFunction.FunctionCode, serializedRequest);
+            var requestProtocolDataUnit = new ProtocolDataUnit(
+                clientFunction.FunctionCode,
+                serializedRequest
+            );
             var requestMessage = new ModbusDataUnit(unitIdentifier, requestProtocolDataUnit);
 
             //Check to see if this is a broadcast request.
@@ -53,30 +67,39 @@ namespace NModbus
             }
 
             //Send the request and wait for a response.
-            var responseMessage = await client.Transport.SendAndReceiveAsync(requestMessage, cancellationToken);
+            var responseMessage = await client.Transport.SendAndReceiveAsync(
+                requestMessage,
+                cancellationToken
+            );
 
             //Check to see if this is an error response
             if (ModbusFunctionCodes.IsErrorBitSet(responseMessage.ProtocolDataUnit.FunctionCode))
-                throw new ModbusServerException((ModbusExceptionCode)responseMessage.ProtocolDataUnit.Data.ToArray()[0]);
+                throw new ModbusServerException(
+                    (ModbusExceptionCode)responseMessage.ProtocolDataUnit.Data.ToArray()[0]
+                );
 
             //Deserialize the response.
-            return clientFunction.MessageSerializer.DeserializeResponse(responseMessage.ProtocolDataUnit.Data.ToArray());
+            return clientFunction.MessageSerializer.DeserializeResponse(
+                responseMessage.ProtocolDataUnit.Data.ToArray()
+            );
         }
 
         public static async Task<bool[]> ReadCoilsAsync(
-            this IModbusClient client, 
-            byte unitIdentifier, 
-            ushort startingAddress, 
+            this IModbusClient client,
+            byte unitIdentifier,
+            ushort startingAddress,
             ushort quantityOfOutputs,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new ReadCoilsRequest(startingAddress, quantityOfOutputs);
 
             var response = await client.ExecuteAsync<ReadCoilsRequest, ReadCoilsResponse>(
-                ModbusFunctionCodes.ReadCoils, 
-                unitIdentifier, 
-                request, 
-                cancellationToken);
+                ModbusFunctionCodes.ReadCoils,
+                unitIdentifier,
+                request,
+                cancellationToken
+            );
 
             return response.Unpack(request.QuantityOfOutputs);
         }
@@ -86,33 +109,44 @@ namespace NModbus
             byte unitIdentifier,
             ushort startingAddress,
             ushort quantityOfInputs,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new ReadDiscreteInputsRequest(startingAddress, quantityOfInputs);
 
-            var response = await client.ExecuteAsync<ReadDiscreteInputsRequest, ReadDiscreteInputsResponse>(
-                ModbusFunctionCodes.ReadDiscreteInputs, 
-                unitIdentifier, 
-                request, 
-                cancellationToken);
+            var response = await client.ExecuteAsync<
+                ReadDiscreteInputsRequest,
+                ReadDiscreteInputsResponse
+            >(ModbusFunctionCodes.ReadDiscreteInputs, unitIdentifier, request, cancellationToken);
 
             return response.Unpack(request.QuantityOfInputs);
         }
 
-        public static async Task<ushort[]> ReadHoldingRegistersAsync(this IModbusClient client, byte unitIdentifier, ushort startingAddress, ushort numberOfRegisters, CancellationToken cancellationToken = default)
+        public static async Task<ushort[]> ReadHoldingRegistersAsync(
+            this IModbusClient client,
+            byte unitIdentifier,
+            ushort startingAddress,
+            ushort numberOfRegisters,
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new ReadHoldingRegistersRequest(startingAddress, numberOfRegisters);
 
-            var response = await client.ExecuteAsync<ReadHoldingRegistersRequest, ReadHoldingRegistersResponse>(
-                ModbusFunctionCodes.ReadHoldingRegisters,
-                unitIdentifier,
-                request,
-                cancellationToken);
+            var response = await client.ExecuteAsync<
+                ReadHoldingRegistersRequest,
+                ReadHoldingRegistersResponse
+            >(ModbusFunctionCodes.ReadHoldingRegisters, unitIdentifier, request, cancellationToken);
 
             return response.RegisterValues;
         }
 
-        public static async Task WriteSingleRegisterAsync(this IModbusClient client, byte unitIdentifier, ushort startingAddress, ushort value, CancellationToken cancellationToken = default)
+        public static async Task WriteSingleRegisterAsync(
+            this IModbusClient client,
+            byte unitIdentifier,
+            ushort startingAddress,
+            ushort value,
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new WriteSingleRegisterRequest(startingAddress, value);
 
@@ -120,23 +154,35 @@ namespace NModbus
                 ModbusFunctionCodes.WriteSingleRegister,
                 unitIdentifier,
                 request,
-                cancellationToken);
+                cancellationToken
+            );
         }
 
-        public static async Task<ushort[]> ReadInputRegistersAsync(this IModbusClient client, byte unitIdentifier, ushort startingAddress, ushort numberOfRegisters, CancellationToken cancellationToken = default)
+        public static async Task<ushort[]> ReadInputRegistersAsync(
+            this IModbusClient client,
+            byte unitIdentifier,
+            ushort startingAddress,
+            ushort numberOfRegisters,
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new ReadInputRegistersRequest(startingAddress, numberOfRegisters);
 
-            var response = await client.ExecuteAsync<ReadInputRegistersRequest, ReadInputRegistersResponse>(
-                ModbusFunctionCodes.ReadInputRegisters,
-                unitIdentifier,
-                request,
-                cancellationToken);
+            var response = await client.ExecuteAsync<
+                ReadInputRegistersRequest,
+                ReadInputRegistersResponse
+            >(ModbusFunctionCodes.ReadInputRegisters, unitIdentifier, request, cancellationToken);
 
             return response.InputRegisters;
         }
 
-        public static async Task WriteSingleCoilAsync(this IModbusClient client, byte unitIdentifier, ushort outputAddress, bool value, CancellationToken cancellationToken = default)
+        public static async Task WriteSingleCoilAsync(
+            this IModbusClient client,
+            byte unitIdentifier,
+            ushort outputAddress,
+            bool value,
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new WriteSingleCoilRequest(outputAddress, value);
 
@@ -144,15 +190,17 @@ namespace NModbus
                 ModbusFunctionCodes.WriteSingleCoil,
                 unitIdentifier,
                 request,
-                cancellationToken);
+                cancellationToken
+            );
         }
 
         public static async Task WriteMultipleCoils(
-            this IModbusClient client, 
-            byte unitIdentifier, 
-            ushort startingAddress, 
-            bool[] outputsValue, 
-            CancellationToken cancellationToken = default)
+            this IModbusClient client,
+            byte unitIdentifier,
+            ushort startingAddress,
+            bool[] outputsValue,
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new WriteMultipleCoilsRequest(startingAddress, outputsValue);
 
@@ -160,18 +208,29 @@ namespace NModbus
                 ModbusFunctionCodes.WriteMultipleCoils,
                 unitIdentifier,
                 request,
-                cancellationToken);
+                cancellationToken
+            );
         }
 
-        public static async Task WriteMultipleRegistersAsync(this IModbusClient client, byte unitIdentifier, ushort startingAddress, ushort[] registers, CancellationToken cancellationToken = default)
+        public static async Task WriteMultipleRegistersAsync(
+            this IModbusClient client,
+            byte unitIdentifier,
+            ushort startingAddress,
+            ushort[] registers,
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new WriteMultipleRegistersRequest(startingAddress, registers);
 
-            await client.ExecuteAsync<WriteMultipleRegistersRequest, WriteMultipleRegistersResponse>(
+            await client.ExecuteAsync<
+                WriteMultipleRegistersRequest,
+                WriteMultipleRegistersResponse
+            >(
                 ModbusFunctionCodes.WriteMultipleRegisters,
                 unitIdentifier,
                 request,
-                cancellationToken);
+                cancellationToken
+            );
         }
 
         //TODO: ReadFileRecord
@@ -183,7 +242,8 @@ namespace NModbus
             ushort referenceAddress,
             ushort andMask,
             ushort orMask,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new MaskWriteRegisterRequest(referenceAddress, andMask, orMask);
 
@@ -191,7 +251,8 @@ namespace NModbus
                 ModbusFunctionCodes.MaskWriteRegister,
                 unitIdentifier,
                 request,
-                cancellationToken);
+                cancellationToken
+            );
         }
 
         public static async Task<ushort[]> ReadWriteMultipleRegisters(
@@ -201,19 +262,25 @@ namespace NModbus
             ushort quantityToRead,
             ushort writeStartingAddress,
             ushort[] writeRegistersValue,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new ReadWriteMultipleRegistersRequest(
                 readStartingAddress,
                 quantityToRead,
                 writeStartingAddress,
-                writeRegistersValue);
+                writeRegistersValue
+            );
 
-            var response = await client.ExecuteAsync<ReadWriteMultipleRegistersRequest, ReadWriteMultipleRegistersResponse>(
+            var response = await client.ExecuteAsync<
+                ReadWriteMultipleRegistersRequest,
+                ReadWriteMultipleRegistersResponse
+            >(
                 ModbusFunctionCodes.ReadWriteMultipleRegisters,
                 unitIdentifier,
                 request,
-                cancellationToken);
+                cancellationToken
+            );
 
             return response.ReadRegistersValue;
         }
@@ -222,7 +289,8 @@ namespace NModbus
             this IModbusClient client,
             byte unitIdentifier,
             ushort fifoPointerAddress,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             var request = new ReadFifoQueueRequest(fifoPointerAddress);
 
@@ -230,7 +298,8 @@ namespace NModbus
                 ModbusFunctionCodes.ReadFifoQueue,
                 unitIdentifier,
                 request,
-                cancellationToken);
+                cancellationToken
+            );
 
             return response.FifoValueRegister;
         }
